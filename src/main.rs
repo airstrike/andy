@@ -37,6 +37,8 @@ async fn main() -> std::io::Result<()> {
 
     // Initialize handlebars
     let mut handlebars = Handlebars::new();
+    
+    // Register formatDate helper
     handlebars.register_helper("formatDate", Box::new(format_date_helper));
     
     // Add currentYear helper
@@ -52,6 +54,7 @@ async fn main() -> std::io::Result<()> {
         Ok(())
     }));
     
+    // Register all templates
     handlebars
         .register_templates_directory(".hbs", "templates")
         .expect("Failed to register handlebars templates");

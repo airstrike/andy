@@ -1,6 +1,6 @@
 use actix_web::{test, App, web};
 use andy::{routes, models::BlogPost};
-use handlebars::{Handlebars, handlebars_helper};
+use handlebars::Handlebars;
 use tokio::fs;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -96,30 +96,10 @@ Test post content.
 "#;
     fs::write(&test_post_path, test_post_content).await.unwrap();
 
-    // Initialize handlebars with debug enabled
+    // Initialize handlebars
     let mut handlebars = Handlebars::new();
     
-    // Register default helpers like "if", "else", "each", etc.
-    handlebars_helper!(eq: |a: str, b: str| a == b);
-    handlebars.register_helper("eq", Box::new(eq));
-    
-    // Don't set strict mode for now to avoid issues with built-in helpers
-    // handlebars.set_strict_mode(true);
-    
-    // Print each template as it's loaded
-    println!("Checking templates directory...");
-    let templates_dir = std::path::Path::new("templates");
-    if templates_dir.exists() {
-        println!("Templates directory exists");
-        let mut entries = fs::read_dir(templates_dir).await.unwrap();
-        while let Some(entry) = entries.next_entry().await.unwrap() {
-            println!("Found template file: {:?}", entry.path());
-        }
-    } else {
-        println!("Templates directory does not exist!");
-    }
-    
-    // Format date helper
+    // Register formatDate helper
     handlebars.register_helper("formatDate", Box::new(|
         h: &handlebars::Helper,
         _: &handlebars::Handlebars,
@@ -140,7 +120,7 @@ Test post content.
         Ok(())
     }));
     
-    // Current year helper
+    // Register currentYear helper
     handlebars.register_helper("currentYear", Box::new(|
         _: &handlebars::Helper,
         _: &handlebars::Handlebars,
@@ -153,30 +133,12 @@ Test post content.
         Ok(())
     }));
 
-    // Register templates with detailed error handling
-    match handlebars.register_templates_directory(".hbs", "templates") {
-        Ok(_) => println!("Successfully registered templates"),
-        Err(e) => println!("Failed to register templates: {}", e),
-    };
-    
-    // List all registered templates
-    println!("Registered templates: {:?}", handlebars.get_templates().keys().collect::<Vec<_>>());
+    // Register all templates
+    handlebars
+        .register_templates_directory(".hbs", "templates")
+        .expect("Failed to register handlebars templates");
     
     let handlebars_ref = Arc::new(handlebars);
-
-    // Try manually rendering a template before setting up the app
-    println!("Trying to manually render the index template...");
-    let data = serde_json::json!({
-        "title": "Blog",
-        "description": "Personal blog and website",
-        "posts": [],
-        "isHome": true,
-    });
-    
-    match handlebars_ref.render("index", &data) {
-        Ok(content) => println!("Successfully rendered index template: {}", content.chars().take(100).collect::<String>()),
-        Err(e) => println!("Failed to render index template: {}", e),
-    }
     
     // Create test app
     let app = test::init_service(
@@ -196,9 +158,6 @@ Test post content.
     // Get response body
     let body = test::read_body(resp).await;
     let body_str = String::from_utf8(body.to_vec()).unwrap();
-    
-    // Print the body for debugging
-    println!("Response body: {}", body_str);
     
     // Check if body contains expected elements
     assert!(body_str.contains("Welcome to My Blog"));
