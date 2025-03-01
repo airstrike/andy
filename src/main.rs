@@ -38,6 +38,20 @@ async fn main() -> std::io::Result<()> {
     // Initialize handlebars
     let mut handlebars = Handlebars::new();
     handlebars.register_helper("formatDate", Box::new(format_date_helper));
+    
+    // Add currentYear helper
+    handlebars.register_helper("currentYear", Box::new(|
+        _: &handlebars::Helper,
+        _: &handlebars::Handlebars,
+        _: &handlebars::Context,
+        _: &mut handlebars::RenderContext,
+        out: &mut dyn handlebars::Output,
+    | -> handlebars::HelperResult {
+        let current_year = Utc::now().format("%Y").to_string();
+        out.write(&current_year)?;
+        Ok(())
+    }));
+    
     handlebars
         .register_templates_directory(".hbs", "templates")
         .expect("Failed to register handlebars templates");

@@ -1,15 +1,16 @@
 # Personal Blog
 
-A simple, modern blog built with Rust and Actix-web. This project uses Handlebars for templating, vanilla JavaScript for frontend interactions, and Markdown for content authoring.
+A simple, modern blog built with Rust and Actix-web. This project uses Handlebars for templating, vanilla JavaScript for frontend interactions, and Markdown for content authoring with syntax highlighting.
 
 ## Features
 
 - Responsive design that works on all devices
 - Markdown-based blog posts with frontmatter
-- Syntax highlighting for code blocks
+- Syntax highlighting for code blocks (powered by syntect)
 - Clean and minimalist design
 - Fast load times thanks to Rust and Actix-web
 - Simple architecture for easy maintenance
+- RFC3339 date formatting
 
 ## Project Structure
 
@@ -19,14 +20,24 @@ A simple, modern blog built with Rust and Actix-web. This project uses Handlebar
 ├── static/              # Static assets (CSS, JavaScript, images)
 │   ├── css/
 │   ├── js/
-│   └── img/
 ├── templates/           # Handlebars templates
-│   ├── layouts/
-│   └── blog/
-└── src/                 # Rust source code
-    ├── models/          # Data models
-    └── routes/          # Route handlers
+│   ├── layouts/         # Base layout templates
+│   └── blog/            # Blog-specific templates
+├── src/                 # Rust source code
+│   ├── models/          # Data models
+│   └── routes/          # Route handlers
+└── tests/               # Integration tests
 ```
+
+## Technical Stack
+
+- **Backend**: Rust with Actix-web
+- **Templating**: Handlebars
+- **Markdown Processing**: pulldown-cmark
+- **Syntax Highlighting**: syntect
+- **Date/Time Handling**: chrono
+- **Error Handling**: thiserror
+- **Logging**: env_logger
 
 ## Running Locally
 
@@ -39,6 +50,14 @@ cargo run
 ```
 
 The server will start at http://localhost:8080
+
+## Development
+
+Run tests with:
+
+```bash
+cargo test
+```
 
 ## Creating Blog Posts
 
@@ -53,6 +72,18 @@ slug: your-post-slug
 ---
 
 Your Markdown content here...
+```
+
+### Syntax Highlighting
+
+The blog supports syntax highlighting for code blocks. Use the standard Markdown fenced code blocks with a language identifier:
+
+```markdown
+​```rust
+fn main() {
+    println!("Hello, world!");
+}
+​```
 ```
 
 ## Build for Production
