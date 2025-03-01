@@ -9,7 +9,7 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
 
 async fn about(hb: web::Data<Arc<Handlebars<'_>>>) -> impl Responder {
     let data = json!({
-        "title": "About | Andy's Blog",
+        "title": "About",
         "description": "About me and this website",
     });
     

@@ -1,4 +1,4 @@
-# Andy's Blog
+# Personal Blog
 
 A simple, modern blog built with Rust and Actix-web. This project uses Handlebars for templating, vanilla JavaScript for frontend interactions, and Markdown for content authoring.
 

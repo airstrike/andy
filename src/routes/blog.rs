@@ -27,7 +27,7 @@ async fn index(hb: web::Data<Arc<Handlebars<'_>>>) -> Result<HttpResponse> {
     let latest_posts = posts.into_iter().take(5).collect::<Vec<_>>();
     
     let data = json!({
-        "title": "Blog | Andy's Website",
+        "title": "Blog",
         "description": "Latest blog posts",
         "posts": latest_posts,
     });
@@ -52,7 +52,7 @@ async fn archive(hb: web::Data<Arc<Handlebars<'_>>>) -> Result<HttpResponse> {
     };
     
     let data = json!({
-        "title": "Archive | Andy's Blog",
+        "title": "Archive",
         "description": "Archive of all blog posts",
         "posts": posts,
     });
@@ -87,7 +87,7 @@ async fn post(
     match post {
         Some(post) => {
             let data = json!({
-                "title": format!("{} | Andy's Blog", post.title),
+                "title": post.title,
                 "description": post.description,
                 "post": post,
             });
