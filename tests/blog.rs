@@ -14,24 +14,60 @@ async fn test_archive_route() {
     }
 
     // Create a test post if none exists
-    let test_post_path = content_dir.join("test-post.md");
+    let test_post_path = content_dir.join("test-archive.md");
     if !fs::metadata(&test_post_path).is_ok() {
         let test_post_content = r#"---
-title: Test Post
+title: Test Archive Post
 date: 2024-03-01T12:00:00Z
-description: A test post for testing
-slug: test-post
+description: A test post for testing the archive
+slug: test-archive-post
 ---
 
-# Test Post Content
+# Test Archive Content
 
 This is a test post for testing the archive route.
 "#;
         fs::write(&test_post_path, test_post_content).unwrap();
     }
 
-    // Initialize handlebars with templates
+    // Initialize handlebars
     let mut handlebars = Handlebars::new();
+    
+    // Register formatDate helper
+    handlebars.register_helper("formatDate", Box::new(|
+        h: &handlebars::Helper,
+        _: &handlebars::Handlebars,
+        _: &handlebars::Context,
+        _: &mut handlebars::RenderContext,
+        out: &mut dyn handlebars::Output,
+    | -> handlebars::HelperResult {
+        let param = h.param(0).and_then(|v| v.value().as_str()).unwrap_or("");
+        
+        if let Ok(date) = chrono::DateTime::parse_from_rfc3339(param) {
+            let utc_date = date.with_timezone(&chrono::Utc);
+            let formatted = utc_date.format("%B %e, %Y").to_string();
+            out.write(&formatted)?;
+        } else {
+            out.write(param)?;
+        }
+        
+        Ok(())
+    }));
+    
+    // Register currentYear helper
+    handlebars.register_helper("currentYear", Box::new(|
+        _: &handlebars::Helper,
+        _: &handlebars::Handlebars,
+        _: &handlebars::Context,
+        _: &mut handlebars::RenderContext,
+        out: &mut dyn handlebars::Output,
+    | -> handlebars::HelperResult {
+        let current_year = chrono::Utc::now().format("%Y").to_string();
+        out.write(&current_year)?;
+        Ok(())
+    }));
+
+    // Register templates
     handlebars.register_templates_directory(".hbs", "templates").expect("Failed to register templates");
     let handlebars_ref = Arc::new(handlebars);
 
@@ -39,6 +75,7 @@ This is a test post for testing the archive route.
     let app = test::init_service(
         App::new()
             .app_data(web::Data::new(handlebars_ref))
+            .service(actix_files::Files::new("/static", "static"))
             .configure(routes::configure)
     ).await;
     
@@ -48,6 +85,15 @@ This is a test post for testing the archive route.
     
     // Check if the response is OK
     assert!(resp.status().is_success());
+    
+    // Get response body
+    let body = test::read_body(resp).await;
+    let body_str = String::from_utf8(body.to_vec()).unwrap();
+    
+    // Check if body contains expected elements
+    assert!(body_str.contains("Blog Archive"));
+    assert!(body_str.contains("test-archive-post"));
+    assert!(body_str.contains("Test Archive Post"));
 }
 
 #[actix_web::test]
@@ -75,8 +121,44 @@ This is a test post for testing the post route.
         fs::write(&test_post_path, test_post_content).unwrap();
     }
 
-    // Initialize handlebars with templates
+    // Initialize handlebars
     let mut handlebars = Handlebars::new();
+    
+    // Register formatDate helper
+    handlebars.register_helper("formatDate", Box::new(|
+        h: &handlebars::Helper,
+        _: &handlebars::Handlebars,
+        _: &handlebars::Context,
+        _: &mut handlebars::RenderContext,
+        out: &mut dyn handlebars::Output,
+    | -> handlebars::HelperResult {
+        let param = h.param(0).and_then(|v| v.value().as_str()).unwrap_or("");
+        
+        if let Ok(date) = chrono::DateTime::parse_from_rfc3339(param) {
+            let utc_date = date.with_timezone(&chrono::Utc);
+            let formatted = utc_date.format("%B %e, %Y").to_string();
+            out.write(&formatted)?;
+        } else {
+            out.write(param)?;
+        }
+        
+        Ok(())
+    }));
+    
+    // Register currentYear helper
+    handlebars.register_helper("currentYear", Box::new(|
+        _: &handlebars::Helper,
+        _: &handlebars::Handlebars,
+        _: &handlebars::Context,
+        _: &mut handlebars::RenderContext,
+        out: &mut dyn handlebars::Output,
+    | -> handlebars::HelperResult {
+        let current_year = chrono::Utc::now().format("%Y").to_string();
+        out.write(&current_year)?;
+        Ok(())
+    }));
+
+    // Register templates
     handlebars.register_templates_directory(".hbs", "templates").expect("Failed to register templates");
     let handlebars_ref = Arc::new(handlebars);
 
@@ -84,6 +166,7 @@ This is a test post for testing the post route.
     let app = test::init_service(
         App::new()
             .app_data(web::Data::new(handlebars_ref))
+            .service(actix_files::Files::new("/static", "static"))
             .configure(routes::configure)
     ).await;
     
@@ -93,4 +176,13 @@ This is a test post for testing the post route.
     
     // Check if the response is OK
     assert!(resp.status().is_success());
+    
+    // Get response body
+    let body = test::read_body(resp).await;
+    let body_str = String::from_utf8(body.to_vec()).unwrap();
+    
+    // Check if body contains expected elements
+    assert!(body_str.contains("Test Post"));
+    assert!(body_str.contains("Test Post Content"));
+    assert!(body_str.contains("March  1, 2024"));
 }
