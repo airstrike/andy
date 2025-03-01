@@ -11,6 +11,7 @@ async fn about(hb: web::Data<Arc<Handlebars<'_>>>) -> impl Responder {
     let data = json!({
         "title": "About",
         "description": "About me and this website",
+        "isAbout": true,
     });
     
     let body = hb.render("about", &data).unwrap_or_else(|err| {

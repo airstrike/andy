@@ -4,8 +4,7 @@ use handlebars::Handlebars;
 use std::sync::Arc;
 use chrono::{DateTime, Utc};
 
-mod routes;
-mod models;
+use andy::routes;
 
 // Helper function for formatting dates in Handlebars templates
 fn format_date_helper(

@@ -13,10 +13,20 @@
             <div class="container">
                 <a href="/" class="logo">Blog</a>
                 <ul>
-                    <li><a href="/">Home</a></li>
-                    <li><a href="/blog">Blog</a></li>
-                    <li><a href="/blog/archive">Archive</a></li>
-                    <li><a href="/about">About</a></li>
+                    {{#if isHome}}
+                        <li><a href="/archive">Archive</a></li>
+                        <li><a href="/about">About</a></li>
+                    {{else if isArchive}}
+                        <li><a href="/">Latest</a></li>
+                        <li><a href="/about">About</a></li>
+                    {{else if isAbout}}
+                        <li><a href="/">Latest</a></li>
+                        <li><a href="/archive">Archive</a></li>
+                    {{else}}
+                        <li><a href="/">Latest</a></li>
+                        <li><a href="/archive">Archive</a></li>
+                        <li><a href="/about">About</a></li>
+                    {{/if}}
                 </ul>
             </div>
         </nav>
