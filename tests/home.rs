@@ -1,7 +1,9 @@
 use actix_web::{test, App, web};
 use andy::routes;
+use handlebars::Handlebars;
 use std::fs;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 #[actix_web::test]
 async fn test_home_route() {
@@ -28,10 +30,15 @@ This is a test post for testing the home route.
         fs::write(&test_post_path, test_post_content).unwrap();
     }
 
+    // Initialize handlebars with templates
+    let mut handlebars = Handlebars::new();
+    handlebars.register_templates_directory(".hbs", "templates").expect("Failed to register templates");
+    let handlebars_ref = Arc::new(handlebars);
+
     // Create test app
     let app = test::init_service(
         App::new()
-            .app_data(web::Data::new(handlebars::Handlebars::new()))
+            .app_data(web::Data::new(handlebars_ref))
             .configure(routes::configure)
     ).await;
     
