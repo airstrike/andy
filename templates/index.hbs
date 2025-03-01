@@ -1,0 +1,29 @@
+{{#> layouts/main}}
+<section class="hero">
+    <h1>Welcome to Andy's Blog</h1>
+    <p>Thoughts, code, and random musings.</p>
+</section>
+
+<section class="latest-posts">
+    <h2>Latest Posts</h2>
+    <div class="post-list">
+        {{#if posts.length}}
+            {{#each posts}}
+                <div class="post-card">
+                    <h3><a href="/blog/{{slug}}">{{title}}</a></h3>
+                    <div class="post-meta">
+                        <time datetime="{{date}}">{{formatDate date}}</time>
+                    </div>
+                    <p>{{description}}</p>
+                    <a href="/blog/{{slug}}" class="read-more">Read more →</a>
+                </div>
+            {{/each}}
+        {{else}}
+            <p>No posts found.</p>
+        {{/if}}
+    </div>
+    <div class="all-posts-link">
+        <a href="/blog/archive">View all posts →</a>
+    </div>
+</section>
+{{/layouts/main}}

@@ -1,0 +1,19 @@
+[package]
+name = "andy"
+version = "0.1.0"
+edition = "2024"
+description = "Andy's personal blog website"
+authors = ["Andy <andy@example.com>"]
+
+[dependencies]
+actix-web = "4.4"
+actix-files = "0.6"
+tokio = { version = "1", features = ["full"] }
+pulldown-cmark = "0.9"
+handlebars = { version = "4.3", features = ["dir_source"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+log = "0.4"
+env_logger = "0.10"
+thiserror = "1.0"

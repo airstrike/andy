@@ -1,0 +1,19 @@
+{{#> layouts/main}}
+<section class="blog-archive">
+    <h1>Blog Archive</h1>
+    <div class="archive-list">
+        {{#if posts.length}}
+            <ul>
+                {{#each posts}}
+                    <li>
+                        <time datetime="{{date}}">{{formatDate date}}</time>
+                        <a href="/blog/{{slug}}">{{title}}</a>
+                    </li>
+                {{/each}}
+            </ul>
+        {{else}}
+            <p>No posts found.</p>
+        {{/if}}
+    </div>
+</section>
+{{/layouts/main}}
