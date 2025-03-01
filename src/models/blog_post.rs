@@ -1,7 +1,11 @@
 use chrono::{DateTime, Utc};
-use pulldown_cmark::{html, Parser};
+use pulldown_cmark::{html, Event, Parser, Tag};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
+use std::sync::OnceLock;
+use syntect::highlighting::{Theme, ThemeSet};
+use syntect::html::highlighted_html_for_string;
+use syntect::parsing::{SyntaxReference, SyntaxSet};
 use tokio::fs;
 use thiserror::Error;
 
@@ -25,6 +29,35 @@ pub enum BlogPostError {
     
     #[error("Missing required field: {0}")]
     MissingField(String),
+    
+    #[error("Syntax highlighting error: {0}")]
+    SyntaxHighlighting(String),
+}
+
+// Static globals for syntax highlighting
+static SYNTAX_SET: OnceLock<SyntaxSet> = OnceLock::new();
+static THEME_SET: OnceLock<ThemeSet> = OnceLock::new();
+static THEME: OnceLock<Theme> = OnceLock::new();
+
+// Helper to get syntax set
+fn get_syntax_set() -> &'static SyntaxSet {
+    SYNTAX_SET.get_or_init(|| SyntaxSet::load_defaults_newlines())
+}
+
+// Helper to get theme
+fn get_theme() -> &'static Theme {
+    THEME.get_or_init(|| {
+        let theme_set = THEME_SET.get_or_init(ThemeSet::load_defaults);
+        // Use the base16-ocean-dark theme
+        theme_set.themes["base16-ocean.dark"].clone()
+    })
+}
+
+// Helper to find syntax definition for a language
+fn find_syntax(lang: &str) -> Option<&'static SyntaxReference> {
+    let syntax_set = get_syntax_set();
+    syntax_set.find_syntax_by_token(lang)
+        .or_else(|| syntax_set.find_syntax_by_extension(lang))
 }
 
 impl BlogPost {
@@ -78,10 +111,76 @@ impl BlogPost {
         let description = description.ok_or_else(|| BlogPostError::MissingField("description".into()))?;
         let slug = slug.ok_or_else(|| BlogPostError::MissingField("slug".into()))?;
         
-        // Convert markdown to HTML
+        // Convert markdown to HTML with syntax highlighting
         let parser = Parser::new(&markdown_content);
         let mut html_output = String::new();
-        html::push_html(&mut html_output, parser);
+        
+        // Process events, adding syntax highlighting for code blocks
+        let mut code_block_content = String::new();
+        let mut code_block_lang = String::new();
+        let mut in_code_block = false;
+        
+        let events: Vec<_> = parser.collect();
+        let mut processed_events = Vec::new();
+        
+        for event in events.into_iter() {
+            match event {
+                Event::Start(Tag::CodeBlock(lang)) => {
+                    in_code_block = true;
+                    if let pulldown_cmark::CodeBlockKind::Fenced(name) = lang {
+                        code_block_lang = name.to_string();
+                    } else {
+                        code_block_lang = String::new();
+                    }
+                    code_block_content.clear();
+                },
+                Event::End(Tag::CodeBlock(_)) => {
+                    in_code_block = false;
+                    
+                    // Apply syntax highlighting
+                    if !code_block_lang.is_empty() {
+                        if let Some(syntax) = find_syntax(&code_block_lang) {
+                            match highlighted_html_for_string(
+                                &code_block_content,
+                                get_syntax_set(),
+                                syntax,
+                                get_theme()
+                            ) {
+                                Ok(highlighted_html) => {
+                                    // Replace the code block with highlighted HTML
+                                    processed_events.push(Event::Html(format!(
+                                        "<pre class=\"code-block code-{}\"><code>{}</code></pre>",
+                                        code_block_lang,
+                                        highlighted_html
+                                    ).into()));
+                                    continue;
+                                },
+                                Err(e) => {
+                                    log::warn!("Failed to highlight code: {}", e);
+                                }
+                            }
+                        }
+                    }
+                    
+                    // If no syntax highlighting was applied, fall back to regular code block
+                    let kind = if !code_block_lang.is_empty() {
+                        pulldown_cmark::CodeBlockKind::Fenced(code_block_lang.clone().into())
+                    } else {
+                        pulldown_cmark::CodeBlockKind::Indented
+                    };
+                    processed_events.push(Event::Start(Tag::CodeBlock(kind.clone())));
+                    processed_events.push(Event::Text(code_block_content.clone().into()));
+                    processed_events.push(Event::End(Tag::CodeBlock(kind)));
+                },
+                Event::Text(text) if in_code_block => {
+                    code_block_content.push_str(&text);
+                    continue;
+                },
+                _ => processed_events.push(event),
+            }
+        }
+        
+        html::push_html(&mut html_output, processed_events.into_iter());
         
         Ok(BlogPost {
             slug,

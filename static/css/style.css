@@ -195,6 +195,53 @@ main {
     background: none;
 }
 
+/* Syntax highlighting styles */
+.code-block {
+    border-radius: 4px;
+    margin: 2rem 0;
+    padding: 1rem;
+    overflow-x: auto;
+    line-height: 1.5;
+}
+
+.code-block code {
+    background: transparent;
+    padding: 0;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 0.9rem;
+}
+
+/* Language-specific styling */
+.code-rust {
+    border-left: 4px solid #dea584;
+}
+
+.code-js, .code-javascript {
+    border-left: 4px solid #f1e05a;
+}
+
+.code-html {
+    border-left: 4px solid #e44b23;
+}
+
+.code-css {
+    border-left: 4px solid #563d7c;
+}
+
+.code-python {
+    border-left: 4px solid #3572A5;
+}
+
+/* Theme defaults - these are fallbacks in case the syntax highlighting fails */
+.code-block .keyword { color: #cc99cd; }
+.code-block .string { color: #99cc99; }
+.code-block .comment { color: #999999; font-style: italic; }
+.code-block .function { color: #6699cc; }
+.code-block .number { color: #f99157; }
+.code-block .attribute { color: #99cc99; }
+.code-block .punctuation { color: #cccccc; }
+.code-block .operator { color: #66cccc; }
+
 .post-navigation {
     margin-top: 3rem;
     padding-top: 1.5rem;

@@ -6,6 +6,7 @@ A simple, modern blog built with Rust and Actix-web. This project uses Handlebar
 
 - Responsive design that works on all devices
 - Markdown-based blog posts with frontmatter
+- Syntax highlighting for code blocks
 - Clean and minimalist design
 - Fast load times thanks to Rust and Actix-web
 - Simple architecture for easy maintenance
